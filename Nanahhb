@@ -1,0 +1,217 @@
+-- // Dịch vụ Roblox
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local SoundService = game:GetService("SoundService")
+
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+-- // Xóa GUI cũ nếu tồn tại để tránh bị trùng lặp khi test lại
+if playerGui:FindFirstChild("RobloxSoundPlayerGui") then
+    playerGui.RobloxSoundPlayerGui:Destroy()
+end
+
+-- // Tạo ScreenGui chính
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "RobloxSoundPlayerGui"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = playerGui
+
+-- // Tạo đối tượng Sound
+local soundObject = Instance.new("Sound")
+soundObject.Name = "CustomMusicPlayer"
+soundObject.Looped = true
+soundObject.Parent = SoundService
+
+-- // 1. Nút tròn mở/đóng Menu (Có thể kéo thả)
+local toggleMenuBtn = Instance.new("TextButton")
+toggleMenuBtn.Name = "ToggleMenuButton"
+toggleMenuBtn.Size = UDim2.new(0, 50, 0, 50)
+toggleMenuBtn.Position = UDim2.new(0, 30, 0, 150)
+toggleMenuBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+toggleMenuBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+toggleMenuBtn.TextSize = 14
+toggleMenuBtn.Font = Enum.Font.GothamBold
+toggleMenuBtn.Text = "MENU"
+toggleMenuBtn.Parent = screenGui
+
+local toggleCorner = Instance.new("UICorner")
+toggleCorner.CornerRadius = UDim.new(1, 0)
+toggleCorner.Parent = toggleMenuBtn
+
+local toggleStroke = Instance.new("UIStroke")
+toggleStroke.Color = Color3.fromRGB(70, 70, 70)
+toggleStroke.Thickness = 2
+toggleStroke.Parent = toggleMenuBtn
+
+-- // 2. Khung Menu chính
+local mainFrame = Instance.new("Frame")
+mainFrame.Name = "MainFrame"
+mainFrame.Size = UDim2.new(0, 300, 0, 190)
+mainFrame.Position = UDim2.new(0, 95, 0, 150)
+mainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+mainFrame.BorderSizePixel = 0
+mainFrame.Visible = true
+mainFrame.Parent = screenGui
+
+local mainCorner = Instance.new("UICorner")
+mainCorner.CornerRadius = UDim.new(0, 10)
+mainCorner.Parent = mainFrame
+
+local mainStroke = Instance.new("UIStroke")
+mainStroke.Color = Color3.fromRGB(60, 60, 60)
+mainStroke.Thickness = 2
+mainStroke.Parent = mainFrame
+
+-- // Thanh tiêu đề (Dùng để kéo thả Menu chính)
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Size = UDim2.new(1, 0, 0, 40)
+titleLabel.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+titleLabel.TextSize = 13
+titleLabel.Font = Enum.Font.GothamBold
+titleLabel.Text = "🎵 Roblox Sound Player (Giữ để kéo)"
+titleLabel.Parent = mainFrame
+
+local titleCorner = Instance.new("UICorner")
+titleCorner.CornerRadius = UDim.new(0, 10)
+titleCorner.Parent = titleLabel
+
+-- // Ô nhập Sound ID
+local idTextBox = Instance.new("TextBox")
+idTextBox.Size = UDim2.new(1, -20, 0, 38)
+idTextBox.Position = UDim2.new(0, 10, 0, 50)
+idTextBox.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+idTextBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+idTextBox.PlaceholderText = "Nhập Sound ID (Ví dụ: 1848354536)..."
+idTextBox.Text = ""
+idTextBox.TextSize = 12
+idTextBox.Font = Enum.Font.Gotham
+idTextBox.ClearTextOnFocus = false
+idTextBox.Parent = mainFrame
+
+local boxCorner = Instance.new("UICorner")
+boxCorner.CornerRadius = UDim.new(0, 6)
+boxCorner.Parent = idTextBox
+
+-- // Nút Bật Nhạc (ON)
+local onBtn = Instance.new("TextButton")
+onBtn.Size = UDim2.new(0.5, -15, 0, 38)
+onBtn.Position = UDim2.new(0, 10, 0, 98)
+onBtn.BackgroundColor3 = Color3.fromRGB(46, 204, 113)
+onBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+onBtn.TextSize = 13
+onBtn.Font = Enum.Font.GothamBold
+onBtn.Text = "BẬT (ON)"
+onBtn.Parent = mainFrame
+
+local onCorner = Instance.new("UICorner")
+onCorner.CornerRadius = UDim.new(0, 6)
+onCorner.Parent = onBtn
+
+-- // Nút Tắt Nhạc (OFF)
+local offBtn = Instance.new("TextButton")
+offBtn.Size = UDim2.new(0.5, -15, 0, 38)
+offBtn.Position = UDim2.new(0.5, 5, 0, 98)
+offBtn.BackgroundColor3 = Color3.fromRGB(231, 76, 60)
+offBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+offBtn.TextSize = 13
+offBtn.Font = Enum.Font.GothamBold
+offBtn.Text = "TẮT (OFF)"
+offBtn.Parent = mainFrame
+
+local offCorner = Instance.new("UICorner")
+offCorner.CornerRadius = UDim.new(0, 6)
+offCorner.Parent = offBtn
+
+-- // Nhãn hiển thị trạng thái
+local statusLabel = Instance.new("TextLabel")
+statusLabel.Size = UDim2.new(1, -20, 0, 25)
+statusLabel.Position = UDim2.new(0, 10, 0, 148)
+statusLabel.BackgroundTransparency = 1
+statusLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
+statusLabel.TextSize = 11
+statusLabel.Font = Enum.Font.GothamItalic
+statusLabel.Text = "Trạng thái: Đang tắt"
+statusLabel.Parent = mainFrame
+
+
+-- // 3. Hàm hỗ trợ kéo thả mượt mà (Hỗ trợ cả PC & Mobile)
+local function makeDraggable(guiObject, dragTarget)
+    dragTarget = dragTarget or guiObject
+    local dragging = false
+    local dragInput, mousePos, framePos
+
+    dragTarget.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            mousePos = input.Position
+            framePos = guiObject.Position
+            
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+
+    dragTarget.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            local delta = input.Position - mousePos
+            guiObject.Position = UDim2.new(
+                framePos.X.Scale, 
+                framePos.X.Offset + delta.X, 
+                framePos.Y.Scale, 
+                framePos.Y.Offset + delta.Y
+            )
+        end
+    end)
+end
+
+-- Kích hoạt tính năng kéo thả cho cả 2 đối tượng
+makeDraggable(toggleMenuBtn)          -- Kéo nút tròn
+makeDraggable(mainFrame, titleLabel)  -- Kéo menu chính bằng thanh tiêu đề
+
+
+-- // 4. Xử lý các sự kiện bấm nút chức năng
+local isMenuOpen = true
+
+-- Bật/Tắt hiển thị menu chính khi ấn nút tròn
+toggleMenuBtn.MouseButton1Click:Connect(function()
+    isMenuOpen = not isMenuOpen
+    mainFrame.Visible = isMenuOpen
+end)
+
+-- Bật nhạc và lặp lại
+onBtn.MouseButton1Click:Connect(function()
+    local rawText = idTextBox.Text
+    local soundIdNumber = rawText:match("%d+") -- Lọc lấy dãy số ID
+    
+    if soundIdNumber then
+        soundObject.SoundId = "rbxassetid://" .. soundIdNumber
+        soundObject.Looped = true -- Bật chế độ lặp lại liên tục
+        soundObject:Play()
+        
+        statusLabel.Text = "Trạng thái: Đang phát (Looping)"
+        statusLabel.TextColor3 = Color3.fromRGB(46, 204, 113)
+    else
+        statusLabel.Text = "Trạng thái: Sound ID không hợp lệ!"
+        statusLabel.TextColor3 = Color3.fromRGB(231, 76, 60)
+    end
+end)
+
+-- Tắt nhạc hoàn toàn
+offBtn.MouseButton1Click:Connect(function()
+    soundObject:Stop()
+    soundObject.SoundId = ""
+    
+    statusLabel.Text = "Trạng thái: Đã tắt"
+    statusLabel.TextColor3 = Color3.fromRGB(231, 76, 60)
+end)
